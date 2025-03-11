@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link href="src/css/output.css" rel="stylesheet" />
+  <title>注册</title>
+</head>
+
+<body>
+<div class="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 bg-gradient-to-r from-blue-400 to-green-400">
+  <div class="w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800 font-poppins">
+    <div class="px-6 py-4">
+      <h3 class="mt-3 text-xl font-medium text-center text-gray-600 dark:text-gray-200">注册账号</h3>
+
+      <form action="register" method="POST" x-data="{ password: '', confirmPassword: '' }">
+        <div class="w-full mt-4">
+          <input class="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-green-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
+                 type="name" name="name" id="name" placeholder="请输入名称" aria-label="Name" required />
+        </div>
+
+        <div class="w-full mt-4">
+          <input class="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-green-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
+                 type="email" name="email" id="email" placeholder="请输入电子邮箱地址" aria-label="Email Address" required />
+        </div>
+
+        <div class="w-full mt-4">
+          <input class="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-green-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
+                 type="password" name="password" id="password" placeholder="请输入密码" x-model="password" aria-label="Password" required />
+        </div>
+
+        <div class="w-full mt-4">
+          <input class="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-green-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
+                 type="password" name="confirm_password" id="confirm_password" placeholder="请再次输入密码" x-model="confirmPassword"
+                 :class="password !== confirmPassword ? 'border-red-500' : ''" aria-label="ConfirmPassword" required />
+          <span x-show="password !== confirmPassword" class="text-red-500 text-sm">密码不一致！</span>
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <button type="submit" class="px-6 w-full items-center py-2 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-500 rounded-lg hover:bg-blue-400 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-50"
+                  :disabled="password !== confirmPassword">
+            注册
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="flex flex-col items-center justify-center py-4 text-center bg-gray-50 dark:bg-gray-700">
+      <div class="flex items-center">
+        <span class="text-sm text-gray-600 dark:text-gray-200">已经有账号了吗？</span>
+        <a href="login" class="mx-2 text-sm font-bold text-blue-500 dark:text-blue-400 hover:underline">前去登录</a>
+      </div>
+
+      <a href="home" class="mt-2 text-sm font-bold text-blue-500 dark:text-blue-400 hover:underline">返回首页</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

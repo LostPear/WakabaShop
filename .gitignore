@@ -1,0 +1,37 @@
+# Java 编译输出
+/target/
+*.class
+
+# IDEA 相关文件
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Maven 依赖缓存
+.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# 日志文件
+*.log
+/logs/
+/*.log.*
+
+# 操作系统临时文件
+.DS_Store
+Thumbs.db
+
+# 其他工具
+*.swp
+*~
+
+# node.js相关文件
+/web/node_modules/
+/web/package.jsom
+/web/package-lock.json
+

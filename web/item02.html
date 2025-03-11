@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <link href="src/css/output.css" rel="stylesheet" />
+    <title>HTML Category 卫衣</title>
+  </head>
+
+  <body>
+    <div class="font-poppins">
+      <header>
+        <nav
+          x-data="{ isOpen: false }"
+          class="fixed bg-white/75 shadow-md backdrop-blur-md backdrop-saturate-150 z-50 top-0 left-0 w-full"
+          style="height: 60px"
+        >
+          <div class="container mx-auto h-full flex items-center">
+            <div class="lg:flex lg:items-center lg:justify-between w-full">
+              <div class="flex items-center justify-between">
+                <a href="index.html" class="mx-auto">
+                  <h1 class="font-bold text-xl">Wakaba Shop</h1>
+                </a>
+
+                <!-- Mobile menu button -->
+                <div class="flex lg:hidden">
+                  <button
+                    x-cloak
+                    @click="isOpen = !isOpen"
+                    type="button"
+                    class="text-gray-500 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 focus:outline-none focus:text-gray-600 dark:focus:text-gray-400"
+                    aria-label="toggle menu"
+                  >
+                    <svg
+                      x-show="!isOpen"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4 8h16M4 16h16"
+                      />
+                    </svg>
+
+                    <svg
+                      x-show="isOpen"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Mobile Menu open: "block", Menu closed: "hidden" -->
+              <div
+                x-cloak
+                :class="[isOpen ? 'translate-x-0 opacity-100 ' : 'opacity-0 -translate-x-full']"
+                class="absolute inset-x-0 z-20 w-full transition-all duration-300 ease-in-out bg-white shadow-md lg:bg-transparent lg:dark:bg-transparent lg:shadow-none dark:bg-gray-900 lg:mt-0 lg:p-0 lg:top-0 lg:relative lg:w-auto lg:opacity-100 lg:translate-x-0"
+              >
+                <div class="-mx-4 lg:flex lg:items-center">
+                  <a
+                    href="index.html"
+                    class="block mx-4 mt-4 text-gray-700 capitalize lg:mt-0 dark:text-gray-200 hover:text-green-800 dark:hover:text-green-600"
+                    >主页</a
+                  >
+                  <a
+                    href="contact.html"
+                    class="block mx-4 mt-4 text-gray-700 capitalize lg:mt-0 dark:text-gray-200 hover:text-green-800 dark:hover:text-green-600"
+                    >联系</a
+                  >
+                  <a
+                    class="block transition-colors px-5 py-2 mt-4 text-sm text-center text-white capitalize bg-green-800 rounded-lg lg:mt-0 hover:bg-green-600 lg:w-auto"
+                    href="login.html"
+                  >
+                    登录
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- 英雄区部分 -->
+        <div
+          class="w-full bg-center bg-contain h-[8rem] pt-[60px]"
+          style="background-image: url('assets/header_green.jpg')"
+        ></div>
+      </header>
+    </div>
+
+    <main class="font-poppins">
+      <!-- 商品介绍部分 -->
+      <section class="container mx-auto py-10 px-16">
+        <div
+          class="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-md overflow-hidden"
+        >
+          <!-- 图片区域 -->
+          <div class="w-full md:w-1/2">
+            <img
+              src="assets/item02.jpg"
+              alt="商品图片"
+              class="w-full object-cover h-auto"
+            />
+          </div>
+
+          <!-- 商品介绍区域 -->
+          <div class="w-full md:w-1/2 p-6">
+            <h2 class="text-2xl font-bold mb-4">HTML Category 卫衣</h2>
+            <p class="text-gray-600 mb-4">
+              装饰着HTML的7种类别，简单又可爱的卫衣。
+              <br />「Metadata content、Flow
+              content...还有什么来着？」说不定什么时候就起作用了呢？
+            </p>
+            <p class="text-lg font-semibold text-green-800 mb-4">¥299.00</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-white text-black py-10 font-poppins">
+      <p class="text-sm text-center">
+        &copy; 2025 Wakaba Shop. All Rights Reserved.
+      </p>
+    </footer>
+  </body>
+</html>
