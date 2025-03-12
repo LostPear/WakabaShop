@@ -33,3 +33,6 @@ Thumbs.db
 # node.js相关文件
 /web/node_modules/
 
+# Tailwind CSS相关文件
+/web/open-tailwindcss.bat
+
