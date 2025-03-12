@@ -32,6 +32,4 @@ Thumbs.db
 
 # node.js相关文件
 /web/node_modules/
-/web/package.jsom
-/web/package-lock.json
 
