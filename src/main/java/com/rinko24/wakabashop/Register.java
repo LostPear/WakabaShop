@@ -1,4 +1,4 @@
-package org.example;
+package com.rinko24.wakabashop;
 
 import java.io.IOException;
 import java.sql.Connection;

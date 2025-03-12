@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>个人中心</title>
+    <script>
+      window.onload = function() {
+        fetch("/profile")
+                .then(response => response.text())
+                .then(data => {
+                  let usernameMatch = data.match(/<meta name="username" content="(.*?)">/);
+                  if (usernameMatch) {
+                    document.getElementById("username").innerText = usernameMatch[1];
+                  }
+                })
+                .catch(error => console.error("无法获取用户信息:", error));
+      };
+    </script>
     <link href="src/css/output.css" rel="stylesheet" />
   </head>
 

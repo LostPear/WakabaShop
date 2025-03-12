@@ -1,4 +1,4 @@
-package org.example;
+package com.rinko24.wakabashop;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

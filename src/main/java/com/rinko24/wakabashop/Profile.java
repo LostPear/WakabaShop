@@ -1,4 +1,4 @@
-package org.example;
+package com.rinko24.wakabashop;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -21,11 +21,8 @@ public class Profile extends HttpServlet {
 
         String username = (String) session.getAttribute("username");
 
-        // 将用户名存入 HTML5 SessionStorage（前端可用）
-        response.setContentType("text/html;charset=UTF-8");
-        response.getWriter().write(
-                "<script>sessionStorage.setItem('username', '" + username + "'); " +
-                "window.location.href='profile.html';</script>"
-        );
+        request.setAttribute("username", username);
+
+        request.getRequestDispatcher("profile.html").forward(request, response);
     }
 }

@@ -1,4 +1,4 @@
-package org.example;
+package com.rinko24.wakabashop;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
