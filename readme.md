@@ -14,4 +14,4 @@ npx @tailwindcss/cli -i ./src/css/input.css -o ./src/css/output.css --watch
 4. 在 IDEA 中配置 tomcat，使用 tomcat 运行项目。
 
 
-** 本项目使用了 Meraki UI 实现部分网页效果，部分 JavaScript 实现使用了 Alpine.js ，由衷感谢各位的付出。
+** 本项目使用了 Meraki UI 实现部分网页效果，部分 JavaScript 实现使用了 Alpine.js ，由衷感谢各位的付出。**
