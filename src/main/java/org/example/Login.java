@@ -5,6 +5,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
@@ -30,9 +31,18 @@ public class Login extends HttpServlet {
         System.out.println("接收到的邮箱：" + email);
         System.out.println("接收到的密码：" + password);
 
-        if (authenticateUser(email, password)) {
-            response.sendRedirect("login_success");
+        String username = authenticateUser(email, password);
+
+        if (username != null) {
+            // 1. 创建 session 记录用户信息
+            HttpSession session = request.getSession();
+            session.setAttribute("username", username);
+            session.setAttribute("email", email);
+
+            // 2. 登录成功，跳转到个人页面
+            response.sendRedirect("profile");
         } else {
+            // 3. 登录失败，返回错误提示
             response.setContentType("text/html;charset=UTF-8");
             PrintWriter out = response.getWriter();
             out.println("<script type='text/javascript'>");
@@ -42,23 +52,24 @@ public class Login extends HttpServlet {
         }
     }
 
-    private boolean authenticateUser(String email, String password) {
-        boolean isValidUser = false;
-        try {
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-            try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-                 PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE email = ? AND password = ?")) {
-                stmt.setString(1, email);
-                stmt.setString(2, password);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        isValidUser = true;
-                    }
+    private String authenticateUser(String email, String password) {
+        String username = null;
+        String sql = "SELECT name FROM users WHERE email = ? AND password = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    username = rs.getString("name");
                 }
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return isValidUser;
+        return username;
     }
 }
