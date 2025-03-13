@@ -24,12 +24,8 @@ public class Login extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("Login 收到 POST 请求");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-
-        System.out.println("接收到的邮箱：" + email);
-        System.out.println("接收到的密码：" + password);
 
         String username = authenticateUser(email, password);
 

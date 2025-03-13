@@ -1,6 +1,7 @@
 package com.rinko24.wakabashop;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -42,17 +43,33 @@ public class Register extends HttpServlet {
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirm_password");
 
+        // 校验用户名格式
+        if (!name.matches("^[a-zA-Z0-9_]+$")) {
+            response.setContentType("text/html;charset=UTF-8");
+            PrintWriter out = response.getWriter();
+            out.println("<script type='text/javascript'>");
+            out.println("alert('用户名只能包含字母、数字和下划线！');");
+            out.println("window.history.back();"); // 返回注册页面
+            out.println("</script>");
+            return;
+        }
         // 校验密码是否一致
         if (!password.equals(confirmPassword)) {
-            request.setAttribute("error", "密码和确认密码不一致");
-            request.getRequestDispatcher("register.html").forward(request, response);
+            PrintWriter out = response.getWriter();
+            out.println("<script type='text/javascript'>");
+            out.println("两次输入的密码不一致！');");
+            out.println("window.history.back();"); // 返回注册页面
+            out.println("</script>");
             return;
         }
 
         // 校验邮箱格式
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            request.setAttribute("error", "邮箱格式不正确");
-            request.getRequestDispatcher("register.html").forward(request, response);
+            PrintWriter out = response.getWriter();
+            out.println("<script type='text/javascript'>");
+            out.println("邮箱格式不正确！');");
+            out.println("window.history.back();"); // 返回注册页面
+            out.println("</script>");
             return;
         }
 
