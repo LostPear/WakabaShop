@@ -14,8 +14,7 @@ import java.sql.*;
 public class Login extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("Login 收到 GET 请求");
-        request.getRequestDispatcher("login.html").forward(request, response);
+            request.getRequestDispatcher("login.html").forward(request, response);
     }
 
     private static final String URL = "jdbc:oracle:thin:@//localhost:1521/xe";

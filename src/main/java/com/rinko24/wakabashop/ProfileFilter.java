@@ -7,8 +7,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebFilter(filterName = "LoginFilter", urlPatterns = {"/profile.html", "/profile"})
-public class LoginFilter implements Filter {
+@WebFilter(filterName = "ProfileFilter", urlPatterns = {"/login*", "/login.html"})
+public class ProfileFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) {}
@@ -20,13 +20,13 @@ public class LoginFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false);
 
-        // 检查 session 是否存在用户信息
-        if (session == null || session.getAttribute("username") == null) {
-                httpResponse.sendRedirect("login"); // 重定向到 /login
-            }
+        // 如果用户已登录，则重定向到个人页面（或者首页）
+        if (session != null && session.getAttribute("username") != null) {
+            httpResponse.sendRedirect("profile"); // 或者重定向到首页，例如 "index.html"
+            return;
+        }
 
-
-        // 继续处理请求
+        // 用户未登录，继续访问 login 页面
         chain.doFilter(request, response);
     }
 
@@ -35,5 +35,4 @@ public class LoginFilter implements Filter {
         Filter.super.destroy();
     }
 }
-
 

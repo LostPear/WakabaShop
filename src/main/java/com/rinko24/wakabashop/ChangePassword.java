@@ -28,7 +28,7 @@ public class ChangePassword extends HttpServlet {
         String newPassword = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
 
-        if (newPassword == null || confirmPassword == null || !newPassword.equals(confirmPassword)) {
+        if (newPassword == null || !newPassword.equals(confirmPassword)) {
             System.out.println("Password is not same");
             response.getWriter().write("<script>alert('密码不一致，请重新输入'); window.history.back();</script>");
             return;
