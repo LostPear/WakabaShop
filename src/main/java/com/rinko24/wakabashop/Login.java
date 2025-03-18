@@ -14,7 +14,14 @@ import java.sql.*;
 public class Login extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false); // 获取已有的 session，不创建新的
+        if (session != null && session.getAttribute("username") != null) {
+            // 用户已登录，重定向到个人主页
+            response.sendRedirect("profile");
+        } else {
+            // 未登录，转发到登录页面
             request.getRequestDispatcher("login.html").forward(request, response);
+        }
     }
 
     private static final String URL = "jdbc:oracle:thin:@//localhost:1521/xe";
