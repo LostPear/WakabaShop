@@ -20,20 +20,18 @@ public class LoginFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false);
 
-        // 检查 session 是否存在用户信息
+        // 检查用户是否已登录
         if (session == null || session.getAttribute("username") == null) {
-                httpResponse.sendRedirect("login"); // 重定向到 /login
-            }
-
+            httpResponse.sendRedirect("login"); // 未登录，重定向到 /login
+            return; // 重要！阻止继续执行
+        }
 
         // 继续处理请求
         chain.doFilter(request, response);
     }
 
     @Override
-    public void destroy() {
-        Filter.super.destroy();
-    }
+    public void destroy() {}
 }
 
 
