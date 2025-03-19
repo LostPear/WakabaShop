@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>用户管理</title>
+  <!-- 引入 Tailwind CSS -->
+</head>
+<body class="bg-gray-100">
+<!-- 居中容器，白色背景，带圆角和阴影，宽度自适应 -->
+<div class="max-w-4xl mx-auto mt-12 p-6 bg-white rounded-lg shadow">
+  <h2 class="text-2xl font-semibold mb-4">用户管理</h2>
+  <!-- 用户列表表格 -->
+  <table class="w-full text-left border-collapse">
+    <thead class="bg-gray-50 border-b">
+    <tr>
+      <th class="px-4 py-2 text-gray-600 font-medium">姓名</th>
+      <th class="px-4 py-2 text-gray-600 font-medium">邮箱</th>
+    </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+    <!-- 示例数据行（实际页面中根据数据库内容重复下面的<tr>） -->
+    <tr>
+      <td class="px-4 py-2">Alice Zhang</td>
+      <td class="px-4 py-2">alice@example.com</td>
+    </tr>
+    <tr>
+      <td class="px-4 py-2">Bob Li</td>
+      <td class="px-4 py-2">bob@example.com</td>
+    </tr>
+    <!-- ... 最多5条数据行 ... -->
+    </tbody>
+  </table>
+  <!-- 分页按钮导航 -->
+  <div class="mt-4 flex justify-between">
+    <!-- 上一页按钮（第一页时不显示） -->
+    <a href="/manage?page=1" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">上一页</a>
+    <!-- 下一页按钮（最后一页时不显示） -->
+    <a href="/manage?page=3" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">下一页</a>
+  </div>
+</div>
+</body>
+</html>
