@@ -11,7 +11,10 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/manage")
 public class Manage extends HttpServlet {
-    private static final int PAGE_SIZE = 5;  // 每页显示5条
+    private static final int PAGE_SIZE = 5;
+    private static final String DB_URL = "jdbc:oracle:thin:@//localhost:1521/xe";
+    private static final String DB_USER = "system";
+    private static final String DB_PASS = "oracle";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -19,132 +22,184 @@ public class Manage extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html; charset=UTF-8");
 
-        // 1. 获取当前页码参数（默认为1）
-        String pageParam = request.getParameter("page");
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("无法加载 Oracle JDBC 驱动", e);
+        }
+
+        String action = request.getParameter("action");
+        if ("delete".equals(action)) {
+            handleDeleteUser(request, response);
+            return;
+        }
+
+        handleListUsers(request, response);
+    }
+
+    private void handleListUsers(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         int page = 1;
+        String pageParam = request.getParameter("page");
         if (pageParam != null) {
             try {
                 page = Integer.parseInt(pageParam);
+                page = Math.max(1, page);
             } catch (NumberFormatException e) {
                 page = 1;
             }
-            if (page < 1) {
-                page = 1;
-            }
         }
 
-        // 2. 连接数据库并执行分页查询
-        // 数据库连接参数
-        String dbURL = "jdbc:oracle:thin:@//localhost:1521/xe";
-        String dbUser = "system";
-        String dbPass = "oracle";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            // 分页查询SQL
+            String sql = "SELECT name, email FROM (" +
+                    "    SELECT name, email, ROWNUM AS rn FROM (" +
+                    "        SELECT name, email FROM users ORDER BY name" +
+                    "    ) WHERE ROWNUM <= ?" +
+                    ") WHERE rn > ?";
 
-            try {
-                Class.forName("oracle.jdbc.driver.OracleDriver");
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("无法加载 Oracle JDBC 驱动", e);
-            }
+            int upper = page * PAGE_SIZE;
+            int lower = (page - 1) * PAGE_SIZE;
 
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, upper);
+                stmt.setInt(2, lower);
 
-        // 定义分页查询SQL：
-        // 使用子查询和 ROWNUM 实现 Oracle 11g 的分页。
-        // 内层子查询按 name 排序并取前 page*5 条，外层查询再过滤掉前 (page-1)*5 条，剩下当前页记录。
-        String sql =
-                "SELECT name, email FROM (" +
-                        "    SELECT name, email, ROWNUM AS rn FROM (" +
-                        "        SELECT name, email FROM users ORDER BY name" +
-                        "    ) WHERE ROWNUM <= ?" +
-                        ") WHERE rn > ?";
+                try (ResultSet rs = stmt.executeQuery()) {
+                    int totalRecords = getTotalRecords(conn);
+                    int totalPages = (int) Math.ceil(totalRecords / (double) PAGE_SIZE);
+                    boolean hasPrev = page > 1;
+                    boolean hasNext = page < totalPages;
 
-        // 计算 ROWNUM 上限和下限
-        int upper = page * PAGE_SIZE;
-        int lower = (page - 1) * PAGE_SIZE;
-
-        try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            // 加载Oracle驱动（可选，新版JDBC可自动加载）
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-            // 设置参数并执行查询
-            stmt.setInt(1, upper);
-            stmt.setInt(2, lower);
-            ResultSet rs = stmt.executeQuery();
-
-            // 额外查询总记录数以确定是否有下一页（用于分页导航）
-            int totalRecords = 0;
-            try (Statement countStmt = conn.createStatement();
-                 ResultSet countRs = countStmt.executeQuery("SELECT COUNT(*) FROM users")) {
-                if (countRs.next()) {
-                    totalRecords = countRs.getInt(1);
+                    // 生成HTML页面
+                    generateUserListHtml(response, rs, page, hasPrev, hasNext);
                 }
             }
-            int totalPages = (int) Math.ceil(totalRecords / (double) PAGE_SIZE);
-            boolean hasPrev = page > 1;
-            boolean hasNext = page < totalPages;
-
-            // 3. 生成 HTML 页面输出
-            PrintWriter out = response.getWriter();
-            out.println("<!DOCTYPE html>");
-            out.println("<html lang='zh-CN'>");
-            out.println("<head>");
-            out.println("  <meta charset='UTF-8' />");
-            out.println("  <title>用户管理</title>");
-            // 引入 Tailwind CSS（使用 CDN 引入脚本方式）
-            out.println("  <script src='https://cdn.tailwindcss.com'></script>");
-            out.println("</head>");
-            out.println("<body class='bg-gray-100'>");
-            out.println("  <div class='max-w-4xl mx-auto mt-12 p-6 bg-white rounded-lg shadow'>");
-            out.println("    <h2 class='text-2xl font-semibold mb-4'>用户管理</h2>");
-            out.println("    <table class='w-full text-left border-collapse'>");
-            out.println("      <thead class='bg-gray-50 border-b'>");
-            out.println("        <tr>");
-            out.println("          <th class='px-4 py-2 text-gray-600 font-medium'>姓名</th>");
-            out.println("          <th class='px-4 py-2 text-gray-600 font-medium'>邮箱</th>");
-            out.println("        </tr>");
-            out.println("      </thead>");
-            out.println("      <tbody class='divide-y divide-gray-100'>");
-
-            boolean hasData = false;
-            while (rs.next()) {
-                hasData = true;
-                String name = rs.getString("name");
-                String email = rs.getString("email");
-                out.println("        <tr>");
-                out.println("          <td class='px-4 py-2'>" + name + "</td>");
-                out.println("          <td class='px-4 py-2'>" + email + "</td>");
-                out.println("        </tr>");
-            }
-            if (!hasData) {
-                // 当前页无数据时的提示（例如超出页数范围或表为空）
-                out.println("        <tr>");
-                out.println("          <td colspan='2' class='px-4 py-2 text-center text-gray-500'>没有用户数据。</td>");
-                out.println("        </tr>");
-            }
-
-            out.println("      </tbody>");
-            out.println("    </table>");
-
-            // 分页按钮导航
-            out.println("    <div class='mt-4 flex justify-between'>");
-            if (hasPrev) {
-                out.println("      <a href='?page=" + (page - 1) + "' " +
-                        "class='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>上一页</a>");
-            } else {
-                // 如果没有上一页，用空白元素占位使布局对齐
-                out.println("      <span></span>");
-            }
-            if (hasNext) {
-                out.println("      <a href='?page=" + (page + 1) + "' " +
-                        "class='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>下一页</a>");
-            } else {
-                out.println("      <span></span>");
-            }
-            out.println("    </div>");
-
-            out.println("  </div>");
-            out.println("</body>");
-            out.println("</html>");
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new ServletException(e);
+        } catch (SQLException e) {
+            throw new ServletException("数据库错误", e);
         }
+    }
+
+    private void handleDeleteUser(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String userName = request.getParameter("name");
+        if (userName == null || userName.trim().isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "未指定用户名");
+            return;
+        }
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            String deleteSql = "DELETE FROM users WHERE name = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+                stmt.setString(1, userName);
+                int affectedRows = stmt.executeUpdate();
+
+                if (affectedRows > 0) {
+                    // 关键：使用 request.getContextPath() 拼接 URL
+                    response.sendRedirect(request.getContextPath() + "/manage");
+                } else {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "未找到指定用户");
+                }
+            }
+        } catch (SQLException e) {
+            throw new ServletException("删除用户失败", e);
+        }
+    }
+
+
+    private int getTotalRecords(Connection conn) throws SQLException {
+        try (Statement countStmt = conn.createStatement();
+             ResultSet countRs = countStmt.executeQuery("SELECT COUNT(*) FROM users")) {
+            return countRs.next() ? countRs.getInt(1) : 0;
+        }
+    }
+
+    private void generateUserListHtml(HttpServletResponse response, ResultSet rs,
+                                      int currentPage, boolean hasPrev, boolean hasNext)
+            throws IOException, SQLException {
+        PrintWriter out = response.getWriter();
+        out.println("<!DOCTYPE html>");
+        out.println("<html lang='zh-CN'>");
+        out.println("<head>");
+        out.println("  <meta charset='UTF-8' />");
+        out.println("  <title>用户管理</title>");
+        out.println("  <script src='https://cdn.tailwindcss.com'></script>");
+        out.println("  <script>");
+        out.println("    function confirmDelete(name) {");
+        out.println("      if (confirm('确定要删除用户 ' + name + ' 吗？')) {");
+        out.println("        fetch('/manage?action=delete&name=' + encodeURIComponent(name), {");
+        out.println("          method: 'GET'");
+        out.println("        })");
+        out.println("        .then(response => {");
+        out.println("          if (response.ok) {");
+        out.println("            window.location.reload();");
+        out.println("          } else {");
+        out.println("            alert('删除用户失败');");
+        out.println("          }");
+        out.println("        })");
+        out.println("        .catch(error => {");
+        out.println("          console.error('删除错误:', error);");
+        out.println("          alert('删除过程中发生错误');");
+        out.println("        });");
+        out.println("      }");
+        out.println("    }");
+        out.println("  </script>");
+        out.println("</head>");
+        out.println("<body class='bg-gray-100'>");
+        out.println("  <div class='max-w-4xl mx-auto mt-12 p-6 bg-white rounded-lg shadow'>");
+        out.println("    <h2 class='text-2xl font-semibold mb-4'>用户管理</h2>");
+        out.println("    <table class='w-full text-left border-collapse'>");
+        out.println("      <thead class='bg-gray-50 border-b'>");
+        out.println("        <tr>");
+        out.println("          <th class='px-4 py-2 text-gray-600 font-medium'>姓名</th>");
+        out.println("          <th class='px-4 py-2 text-gray-600 font-medium'>邮箱</th>");
+        out.println("          <th class='px-4 py-2 text-gray-600 font-medium'>操作</th>");
+        out.println("        </tr>");
+        out.println("      </thead>");
+        out.println("      <tbody class='divide-y divide-gray-100'>");
+
+        boolean hasData = false;
+        while (rs.next()) {
+            hasData = true;
+            String name = rs.getString("name");
+            String email = rs.getString("email");
+            out.println("        <tr>");
+            out.println("          <td class='px-4 py-2'>" + name + "</td>");
+            out.println("          <td class='px-4 py-2'>" + email + "</td>");
+            out.println("          <td class='px-4 py-2'>");
+            out.println("            <button onclick='confirmDelete(\"" + name + "\")' " +
+                    "class='bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600'>删除</button>");
+            out.println("          </td>");
+            out.println("        </tr>");
+        }
+
+        if (!hasData) {
+            out.println("        <tr>");
+            out.println("          <td colspan='3' class='px-4 py-2 text-center text-gray-500'>没有用户数据。</td>");
+            out.println("        </tr>");
+        }
+
+        out.println("      </tbody>");
+        out.println("    </table>");
+
+        // 分页导航
+        out.println("    <div class='mt-4 flex justify-between'>");
+        if (hasPrev) {
+            out.println("      <a href='?page=" + (currentPage - 1) + "' " +
+                    "class='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>上一页</a>");
+        } else {
+            out.println("      <span class='px-4 py-2 bg-gray-300 text-white rounded'>上一页</span>");
+        }
+        if (hasNext) {
+            out.println("      <a href='?page=" + (currentPage + 1) + "' " +
+                    "class='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>下一页</a>");
+        } else {
+            out.println("      <span class='px-4 py-2 bg-gray-300 text-white rounded'>下一页</span>");
+        }
+        out.println("    </div>");
+
+        out.println("  </div>");
+        out.println("</body>");
+        out.println("</html>");
     }
 }
