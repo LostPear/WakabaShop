@@ -41,6 +41,8 @@ public class Manage extends HttpServlet {
             throws ServletException, IOException {
         int page = 1;
         String pageParam = request.getParameter("page");
+        String searchName = request.getParameter("search");
+
         if (pageParam != null) {
             try {
                 page = Integer.parseInt(pageParam);
@@ -51,10 +53,14 @@ public class Manage extends HttpServlet {
         }
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
-            // 分页查询SQL
+            // Modify SQL to support search functionality
             String sql = "SELECT name, email FROM (" +
                     "    SELECT name, email, ROWNUM AS rn FROM (" +
-                    "        SELECT name, email FROM users ORDER BY name" +
+                    "        SELECT name, email FROM users " +
+                    (searchName != null && !searchName.trim().isEmpty()
+                            ? "WHERE LOWER(name) LIKE LOWER(?)"
+                            : "") +
+                    "        ORDER BY name" +
                     "    ) WHERE ROWNUM <= ?" +
                     ") WHERE rn > ?";
 
@@ -62,21 +68,42 @@ public class Manage extends HttpServlet {
             int lower = (page - 1) * PAGE_SIZE;
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, upper);
-                stmt.setInt(2, lower);
+                int paramIndex = 1;
+                if (searchName != null && !searchName.trim().isEmpty()) {
+                    stmt.setString(paramIndex++, "%" + searchName.trim() + "%");
+                }
+                stmt.setInt(paramIndex++, upper);
+                stmt.setInt(paramIndex, lower);
 
                 try (ResultSet rs = stmt.executeQuery()) {
-                    int totalRecords = getTotalRecords(conn);
+                    int totalRecords = getTotalRecords(conn, searchName);
                     int totalPages = (int) Math.ceil(totalRecords / (double) PAGE_SIZE);
                     boolean hasPrev = page > 1;
                     boolean hasNext = page < totalPages;
 
                     // 生成HTML页面
-                    generateUserListHtml(response, rs, page, hasPrev, hasNext);
+                    generateUserListHtml(response, rs, page, hasPrev, hasNext, searchName);
                 }
             }
         } catch (SQLException e) {
             throw new ServletException("数据库错误", e);
+        }
+    }
+
+    private int getTotalRecords(Connection conn, String searchName) throws SQLException {
+        String countSql = "SELECT COUNT(*) FROM users " +
+                (searchName != null && !searchName.trim().isEmpty()
+                        ? "WHERE LOWER(name) LIKE LOWER(?)"
+                        : "");
+
+        try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
+            if (searchName != null && !searchName.trim().isEmpty()) {
+                countStmt.setString(1, "%" + searchName.trim() + "%");
+            }
+
+            try (ResultSet countRs = countStmt.executeQuery()) {
+                return countRs.next() ? countRs.getInt(1) : 0;
+            }
         }
     }
 
@@ -106,16 +133,9 @@ public class Manage extends HttpServlet {
         }
     }
 
-
-    private int getTotalRecords(Connection conn) throws SQLException {
-        try (Statement countStmt = conn.createStatement();
-             ResultSet countRs = countStmt.executeQuery("SELECT COUNT(*) FROM users")) {
-            return countRs.next() ? countRs.getInt(1) : 0;
-        }
-    }
-
     private void generateUserListHtml(HttpServletResponse response, ResultSet rs,
-                                      int currentPage, boolean hasPrev, boolean hasNext)
+                                      int currentPage, boolean hasPrev, boolean hasNext,
+                                      String searchName)
             throws IOException, SQLException {
         PrintWriter out = response.getWriter();
         out.println("<!DOCTYPE html>");
@@ -127,7 +147,7 @@ public class Manage extends HttpServlet {
         out.println("  <script>");
         out.println("    function confirmDelete(name) {");
         out.println("      if (confirm('确定要删除用户 ' + name + ' 吗？')) {");
-        out.println("        fetch('/manage?action=delete&name=' + encodeURIComponent(name), {");
+        out.println("        fetch('manage?action=delete&name=' + encodeURIComponent(name), {");
         out.println("          method: 'GET'");
         out.println("        })");
         out.println("        .then(response => {");
@@ -148,6 +168,15 @@ public class Manage extends HttpServlet {
         out.println("<body class='bg-gray-100'>");
         out.println("  <div class='max-w-4xl mx-auto mt-12 p-6 bg-white rounded-lg shadow'>");
         out.println("    <h2 class='text-2xl font-semibold mb-4'>用户管理</h2>");
+
+        // 搜索表单
+        out.println("    <form action='manage' method='get' class='mb-4 flex'>");
+        out.println("      <input type='text' name='search' placeholder='按用户名搜索' " +
+                "value='" + (searchName != null ? searchName : "") + "' " +
+                "class='flex-grow px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500'>");
+        out.println("      <button type='submit' class='bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600'>搜索</button>");
+        out.println("    </form>");
+
         out.println("    <table class='w-full text-left border-collapse'>");
         out.println("      <thead class='bg-gray-50 border-b'>");
         out.println("        <tr>");
@@ -175,7 +204,7 @@ public class Manage extends HttpServlet {
 
         if (!hasData) {
             out.println("        <tr>");
-            out.println("          <td colspan='3' class='px-4 py-2 text-center text-gray-500'>没有用户数据。</td>");
+            out.println("          <td colspan='3' class='px-4 py-2 text-center text-gray-500'>没有找到匹配的用户。</td>");
             out.println("        </tr>");
         }
 
@@ -184,14 +213,17 @@ public class Manage extends HttpServlet {
 
         // 分页导航
         out.println("    <div class='mt-4 flex justify-between'>");
+        String searchParam = searchName != null && !searchName.trim().isEmpty()
+                ? "&search=" + searchName
+                : "";
         if (hasPrev) {
-            out.println("      <a href='?page=" + (currentPage - 1) + "' " +
+            out.println("      <a href='?page=" + (currentPage - 1) + searchParam + "' " +
                     "class='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>上一页</a>");
         } else {
             out.println("      <span class='px-4 py-2 bg-gray-300 text-white rounded'>上一页</span>");
         }
         if (hasNext) {
-            out.println("      <a href='?page=" + (currentPage + 1) + "' " +
+            out.println("      <a href='?page=" + (currentPage + 1) + searchParam + "' " +
                     "class='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>下一页</a>");
         } else {
             out.println("      <span class='px-4 py-2 bg-gray-300 text-white rounded'>下一页</span>");
